@@ -40,6 +40,15 @@ const typeDefs = gql`
     job(id : ID) : Job
   }
 
+  type Message {
+    id : String
+    title : String
+  }
+
+  type Mutation {
+    createJob (title : String, descriptionJob : String, jobType: String, name : String, companyLogo : String, location : String, email : String, descriptionCompany : String) : Message
+  }
+
 `;
 
 const resolvers = {
@@ -86,6 +95,26 @@ const resolvers = {
         job.data.data.User = user.data.data
         
         return job.data.data
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  },
+  Mutation : {
+    createJob : async (_, args, context) => {
+      try {
+        const {title, descriptionJob, jobType, name, companyLogo, location, email, descriptionCompany} = args
+        // console.log(title, descriptionJob, jobType, name, companyLogo, location, email, descriptionCompany)
+        console.log(context.req.headers.access_token, 'ini context')
+        const user = await axios({
+          url : baseUrl+'jobs',
+          method : 'POST',
+          headers : {
+            access_token : context.req.headers.access_token
+          },
+          data : {title, descriptionJob, jobType, name, companyLogo, location, email, descriptionCompany}
+        })
+        return user.data.data
       } catch (error) {
         console.log(error)
       }
