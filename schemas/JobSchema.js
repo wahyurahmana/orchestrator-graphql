@@ -47,6 +47,7 @@ const typeDefs = gql`
 
   type Mutation {
     createJob (title : String, descriptionJob : String, jobType: String, name : String, companyLogo : String, location : String, email : String, descriptionCompany : String) : Message
+    deleteJob (id : ID) : Message
   }
 
 `;
@@ -116,7 +117,21 @@ const resolvers = {
         })
         return user.data.data
       } catch (error) {
-        console.log(error)
+        console.log(error.response)
+      }
+    },
+    deleteJob : async (_,args, context) => {
+      try {
+        const user = await axios({
+          url : baseUrl+'jobs/'+args.id,
+          method : 'DELETE',
+          headers : {
+            access_token : context.req.headers.access_token
+          }
+        })
+        return user.data
+      } catch (error) {
+        return error.response.data
       }
     }
   }
