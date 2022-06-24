@@ -90,7 +90,8 @@ const resolvers = {
         console.log(user.data)
         return user.data.data
       } catch (error) {
-        console.log(error)
+        console.log(error.response)
+        return error.response.data
       }
     }
   }

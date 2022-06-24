@@ -1,5 +1,8 @@
 const { gql } = require('apollo-server');
 const axios = require('axios');
+const Redis = require("ioredis");
+const redis = new Redis()
+
 const baseUrl = 'http://localhost:5000/'
 const userUrl = 'http://localhost:3000/users/'
 
@@ -56,26 +59,34 @@ const resolvers = {
   Query : {
     jobs : async () => {
       try {
-        const jobs = await axios({
-          url : baseUrl+'jobs',
-          method : 'GET'
-        })
-        console.log(jobs.data)
-        const userResult = await axios({
-          url : `${userUrl}`,
-          method : 'GET'
-        })
-
-        //proses include data jobs beserta users
-        jobs.data.data.forEach((el) => {
-          userResult.data.data.forEach(e => {
-            if(el.authorId === e._id){
-              el.User = e
-            }
+      const checkCacheUser = await redis.get("jobsKeyGraphql")
+        if(!checkCacheUser){
+          const jobs = await axios({
+            url : baseUrl+'jobs',
+            method : 'GET'
           })
-        })//isi dari jobs.data.data sudah terupdate dikarenakan ada proses 'el.User' > menambahkan key baru dengan nilai e
+          console.log(jobs.data)
+          const userResult = await axios({
+            url : `${userUrl}`,
+            method : 'GET'
+          })
+  
+          //proses include data jobs beserta users
+          jobs.data.data.forEach((el) => {
+            userResult.data.data.forEach(e => {
+              if(el.authorId === e._id){
+                el.User = e
+              }
+            })
+          })//isi dari jobs.data.data sudah terupdate dikarenakan ada proses 'el.User' > menambahkan key baru dengan nilai e
+          console.log('tanpa redis')
+          redis.set("jobsKeyGraphql", JSON.stringify(jobs.data.data))
+          return jobs.data.data
 
-        return jobs.data.data
+        }else{
+          console.log('pakai redis')
+          return JSON.parse(checkCacheUser)
+        }
       } catch (error) {
         console.log(error)
       }
@@ -115,6 +126,8 @@ const resolvers = {
           },
           data : {title, descriptionJob, jobType, name, companyLogo, location, email, descriptionCompany}
         })
+        await redis.del("jobsKeyGraphql")
+        console.log('redis dihapus')
         return user.data.data
       } catch (error) {
         console.log(error.response)
@@ -129,6 +142,8 @@ const resolvers = {
             access_token : context.req.headers.access_token
           }
         })
+        await redis.del("jobsKeyGraphql")
+        console.log('redis dihapus')
         return user.data
       } catch (error) {
         return error.response.data
