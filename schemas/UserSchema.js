@@ -1,9 +1,15 @@
 const { gql } = require('apollo-server');
 const axios = require('axios');
-// const Redis = require("ioredis");
+const Redis = require("ioredis");
 // const redis = new Redis()
+const redis = new Redis({
+  port: 10687,
+  host: "redis-10687.c292.ap-southeast-1-1.ec2.cloud.redislabs.com",
+  username: "default",
+  password: process.env.PASSWORD_REDIS
+});
 
-const baseUrl = 'http://localhost:3000/users/'
+const baseUrl = 'http://18.141.223.254:3000/users/'
 
 const typeDefs = gql`
   type User {

@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { ApolloServer } = require('apollo-server');
 const userSchema = require('./schemas/UserSchema')
 const jobSchema = require('./schemas/JobSchema')
